@@ -1,0 +1,30 @@
+---
+- name: Create custom facts for md devices
+  set_fact: server="{{item.device | regex_replace('/dev/', '') }}"
+  with_items:
+     - "{{ansible_mounts}}"
+  register: md_result
+  when: has_mddevice
+
+- set_fact: md="{{ md_result.results | map(attribute='ansible_facts.server') | list }}"
+  when: has_mddevice
+
+- name: Install mdraid check config
+  template:
+    src: conf.d/md.yaml.j2
+    dest: "/etc/dd-agent/conf.d/md.yaml"
+    owner: dd-agent
+    group: root
+    mode: 0644
+  when: has_mddevice
+
+- name: Install mdraid check
+  template:
+    src: checks.d/md.py.j2
+    dest: "/etc/dd-agent/checks.d/md.py"
+    owner: dd-agent
+    group: root
+    mode: 0644
+  when: has_mddevice
+  notify:
+   - restart datadog-agent

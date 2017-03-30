@@ -1,0 +1,6 @@
+init_config:
+
+instances:
+{% for device in md %}
+    - device: {{ device }}
+{% endfor %}
